@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Actuator G</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="logo">⚡ Actuator G</div>
+      <div id="status-badge" class="badge disconnected">Disconnected</div>
+    </header>
+
+    <section id="config-section">
+      <h2>Configuration</h2>
+      <div class="field">
+        <label for="broker-url">Broker URL</label>
+        <input type="url" id="broker-url" placeholder="https://broker.example.com">
+      </div>
+      <div class="field">
+        <label for="broker-token">Broker Token</label>
+        <input type="password" id="broker-token" placeholder="seks_actuator_xxx">
+      </div>
+      <div class="field">
+        <label for="actuator-id">Actuator ID</label>
+        <input type="text" id="actuator-id" placeholder="my-actuator">
+      </div>
+      <div class="actions">
+        <button id="btn-start" class="btn primary">Connect</button>
+        <button id="btn-stop" class="btn danger" disabled>Disconnect</button>
+      </div>
+    </section>
+
+    <section id="log-section">
+      <h2>Logs</h2>
+      <div id="log-output"></div>
+    </section>
+
+    <footer>
+      <span id="version">v0.1.0</span>
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

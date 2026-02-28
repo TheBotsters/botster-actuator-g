@@ -1,0 +1,8 @@
+# Rust build artifacts
+src-tauri/target/
+
+# Sidecar binaries (built separately, not checked in)
+src-tauri/binaries/actuator-g-*
+
+# Generated icons (placeholder — replace with real ones)
+# src-tauri/icons/
