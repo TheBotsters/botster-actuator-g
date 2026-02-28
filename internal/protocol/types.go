@@ -37,6 +37,8 @@ type ProcessPayload struct {
 	SessionID string   `json:"sessionId,omitempty"`
 	Data      string   `json:"data,omitempty"`
 	Keys      []string `json:"keys,omitempty"`
+	Rows      *uint16  `json:"rows,omitempty"`
+	Cols      *uint16  `json:"cols,omitempty"`
 	Offset    *int     `json:"offset,omitempty"`
 	Limit     *int     `json:"limit,omitempty"`
 }

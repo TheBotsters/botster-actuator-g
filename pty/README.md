@@ -1,32 +1,17 @@
-# PTY Sidecar (Future)
+# PTY Support
 
-When PTY support is needed, a small C sidecar will handle PTY allocation and proxying.
+Pure Go via `creack/pty` — no CGO, no sidecar needed.
 
-## Why a sidecar?
+Works on both Linux and macOS using Go's syscall package
+(`posix_openpt`/`grantpt`/`unlockpt`).
 
-PTY allocation requires OS-level syscalls that vary by platform. Keeping this in a separate
-binary allows the main actuator-g to remain pure Go (CGO_ENABLED=0, fully static).
+## Implementation
 
-## Protocol (Unix socket, length-prefixed binary frames)
+PTY is handled directly in `internal/executor/shell_pty.go`.
+When `pty: true` is requested, we use `creack/pty` to allocate a
+pseudo-terminal and attach it to the subprocess.
 
-```
-actuator-g                          pty-sidecar
-     │                                    │
-     │──── spawn(cmd, rows, cols) ───────▶│  (forks, execs, attaches PTY)
-     │◀─── ready(pid) ──────────────────── │
-     │                                    │
-     │──── data(bytes) ─────────────────▶ │  (stdin → PTY master)
-     │◀─── data(bytes) ────────────────── │  (PTY master → stdout)
-     │                                    │
-     │──── resize(rows, cols) ──────────▶ │  (TIOCSWINSZ ioctl)
-     │                                    │
-     │◀─── exit(code, signal) ─────────── │
-```
+## Previous Design (obsolete)
 
-## Language: C (~200 lines)
-
-Direct syscall access, tiny binary, zero dependencies beyond libc.
-
-## Status: Not yet implemented
-
-The main actuator logs a warning and falls back to regular exec when PTY is requested.
+Originally planned a C sidecar to avoid CGO. Turns out `creack/pty`
+is pure Go and works cross-platform. Sidecar design scrapped 2026-02-28.

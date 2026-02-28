@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -12,6 +13,14 @@ import (
 	"github.com/TheBotsters/botster-actuator-g/internal/process"
 	"github.com/TheBotsters/botster-actuator-g/internal/protocol"
 )
+
+// ResizePTY resizes the PTY attached to a session.
+func ResizePTY(session *process.Session, rows, cols uint16) error {
+	if session.Ptmx == nil {
+		return fmt.Errorf("session %s has no PTY", session.ID)
+	}
+	return pty.Setsize(session.Ptmx, &pty.Winsize{Rows: rows, Cols: cols})
+}
 
 // ExecuteShellPTY runs a shell command with a PTY attached.
 func ExecuteShellPTY(registry *process.Registry, payload protocol.ExecPayload, cwd string, callbacks ShellCallbacks) *process.Session {
@@ -47,6 +56,7 @@ func ExecuteShellPTY(registry *process.Registry, payload protocol.ExecPayload, c
 	}
 
 	session.Pid = cmd.Process.Pid
+	session.Ptmx = ptmx  // keep reference for resize
 	session.Stdin = ptmx // writes to ptmx go to the child's stdin
 	log.Printf("[shell] Started PTY process %d: %s", session.Pid, payload.Command)
 

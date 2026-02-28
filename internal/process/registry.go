@@ -4,6 +4,7 @@ package process
 import (
 	"io"
 	"math/rand"
+	"os"
 	"strings"
 	"sync"
 	"syscall"
@@ -32,6 +33,7 @@ type Session struct {
 	Aggregated strings.Builder
 	tail       string
 	Stdin      io.Writer
+	Ptmx       *os.File // PTY master fd (for resize support)
 
 	mu sync.Mutex
 }

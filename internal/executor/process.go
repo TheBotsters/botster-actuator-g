@@ -31,6 +31,8 @@ func (h *ProcessHandler) Handle(payload protocol.ProcessPayload) protocol.Proces
 		return h.writeToSession(payload.SessionID, payload.Data)
 	case "send-keys":
 		return h.sendKeysToSession(payload.SessionID, payload.Keys)
+	case "resize":
+		return h.resizeSession(payload.SessionID, payload.Rows, payload.Cols)
 	case "kill":
 		return h.killSession(payload.SessionID)
 	default:
@@ -163,6 +165,27 @@ func (h *ProcessHandler) killSession(sessionID string) protocol.ProcessResult {
 		return protocol.ProcessResult{Error: "Failed to kill process (may have already exited)"}
 	}
 
+	info := h.registry.ToProcessInfo(s)
+	return protocol.ProcessResult{Session: &info}
+}
+
+func (h *ProcessHandler) resizeSession(sessionID string, rows, cols *uint16) protocol.ProcessResult {
+	if sessionID == "" {
+		return protocol.ProcessResult{Error: "Session ID required for resize action"}
+	}
+	if rows == nil || cols == nil {
+		return protocol.ProcessResult{Error: "Both rows and cols are required for resize action"}
+	}
+	s := h.registry.GetSession(sessionID)
+	if s == nil {
+		return protocol.ProcessResult{Error: fmt.Sprintf("Session not found: %s", sessionID)}
+	}
+	if s.Exited {
+		return protocol.ProcessResult{Error: "Cannot resize exited process"}
+	}
+	if err := ResizePTY(s, *rows, *cols); err != nil {
+		return protocol.ProcessResult{Error: fmt.Sprintf("Failed to resize PTY: %s", err.Error())}
+	}
 	info := h.registry.ToProcessInfo(s)
 	return protocol.ProcessResult{Session: &info}
 }
