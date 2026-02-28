@@ -1,2 +1,3 @@
-actuator-g
-actuator-g-*
+# Built binaries (root level only)
+/actuator-g
+/actuator-g-*
