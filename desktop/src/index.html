@@ -3,44 +3,187 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Actuator G</title>
+  <title>Botster Desktop</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="app">
-    <header>
-      <div class="logo">⚡ Actuator G</div>
-      <div id="status-badge" class="badge disconnected">Disconnected</div>
-    </header>
+    <nav id="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-text">Botster</span>
+      </div>
+      <div class="sidebar-nav">
+        <button class="nav-item active" data-tab="status">
+          <span class="nav-icon">◉</span>
+          <span class="nav-label">Status</span>
+        </button>
+        <button class="nav-item" data-tab="files">
+          <span class="nav-icon">📁</span>
+          <span class="nav-label">File Access</span>
+        </button>
+        <button class="nav-item" data-tab="logs">
+          <span class="nav-icon">📋</span>
+          <span class="nav-label">Logs</span>
+        </button>
+        <button class="nav-item" data-tab="settings">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">Settings</span>
+        </button>
+      </div>
+      <div class="sidebar-footer">
+        <div class="agent-pill">
+          <span class="status-dot connected"></span>
+          <span class="agent-name">peter-agent-01</span>
+        </div>
+      </div>
+    </nav>
 
-    <section id="config-section">
-      <h2>Configuration</h2>
-      <div class="field">
-        <label for="broker-url">Broker URL</label>
-        <input type="url" id="broker-url" placeholder="https://broker.example.com">
-      </div>
-      <div class="field">
-        <label for="broker-token">Broker Token</label>
-        <input type="password" id="broker-token" placeholder="seks_actuator_xxx">
-      </div>
-      <div class="field">
-        <label for="actuator-id">Actuator ID</label>
-        <input type="text" id="actuator-id" placeholder="my-actuator">
-      </div>
-      <div class="actions">
-        <button id="btn-start" class="btn primary">Connect</button>
-        <button id="btn-stop" class="btn danger" disabled>Disconnect</button>
-      </div>
-    </section>
+    <main id="content">
+      <!-- STATUS TAB -->
+      <section id="tab-status" class="tab-panel active">
+        <div class="panel-header">
+          <h1>Agent Status</h1>
+        </div>
+        <div class="status-hero">
+          <div class="status-indicator connected">
+            <div class="status-ring"></div>
+            <div class="status-label">Connected</div>
+          </div>
+          <div class="status-meta">
+            <div class="meta-row">
+              <span class="meta-key">Agent</span>
+              <span class="meta-val">peter-agent-01</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Broker</span>
+              <span class="meta-val">broker.botsters.dev</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Uptime</span>
+              <span class="meta-val" id="uptime">2h 34m</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Capabilities</span>
+              <span class="meta-val caps">shell · filesystem · git · docker</span>
+            </div>
+          </div>
+        </div>
 
-    <section id="log-section">
-      <h2>Logs</h2>
-      <div id="log-output"></div>
-    </section>
+        <div class="section-divider"></div>
 
-    <footer>
-      <span id="version">v0.1.0</span>
-    </footer>
+        <div class="activity-section">
+          <h2>Recent Activity</h2>
+          <div id="activity-feed" class="activity-feed"></div>
+        </div>
+      </section>
+
+      <!-- FILE ACCESS TAB -->
+      <section id="tab-files" class="tab-panel">
+        <div class="panel-header">
+          <h1>File Access</h1>
+          <div class="panel-actions">
+            <button class="btn secondary" id="btn-add-file">+ Add File</button>
+            <button class="btn secondary" id="btn-add-folder">+ Add Folder</button>
+          </div>
+        </div>
+
+        <div id="drop-zone" class="drop-zone">
+          <div class="drop-zone-content">
+            <div class="drop-icon">📂</div>
+            <div class="drop-title">Drop files or folders here</div>
+            <div class="drop-subtitle">Grant your agent access to specific files and directories</div>
+          </div>
+        </div>
+
+        <div class="granted-section">
+          <h2>Granted Access <span class="count-badge" id="access-count">3</span></h2>
+          <div id="access-list" class="access-list"></div>
+        </div>
+      </section>
+
+      <!-- LOGS TAB -->
+      <section id="tab-logs" class="tab-panel">
+        <div class="panel-header">
+          <h1>Logs</h1>
+          <div class="panel-actions">
+            <div class="filter-group">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="info">Info</button>
+              <button class="filter-btn" data-filter="error">Errors</button>
+            </div>
+            <button class="btn ghost" id="btn-clear-logs">Clear</button>
+          </div>
+        </div>
+        <div id="log-output" class="log-output"></div>
+      </section>
+
+      <!-- SETTINGS TAB -->
+      <section id="tab-settings" class="tab-panel">
+        <div class="panel-header">
+          <h1>Settings</h1>
+          <div class="panel-actions">
+            <div class="role-toggle">
+              <button class="role-btn active" data-role="simple">Simple</button>
+              <button class="role-btn" data-role="advanced">Advanced</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h2>Connection</h2>
+          <div class="settings-card">
+            <div class="field">
+              <label>Agent Name</label>
+              <input type="text" id="set-agent-id" value="peter-agent-01">
+            </div>
+            <div class="field advanced-only">
+              <label>Broker URL</label>
+              <input type="url" id="set-broker-url" value="https://broker.botsters.dev">
+            </div>
+            <div class="field advanced-only">
+              <label>Broker Token</label>
+              <input type="password" id="set-broker-token" value="seks_actuator_xxxxxxxxxxxx">
+            </div>
+            <div class="settings-actions">
+              <button class="btn primary" id="btn-save-settings">Save</button>
+              <button class="btn secondary" id="btn-reconnect">Reconnect</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section advanced-only">
+          <h2>Advanced</h2>
+          <div class="settings-card">
+            <div class="field">
+              <label>Capabilities</label>
+              <div class="chip-group">
+                <span class="chip active">shell</span>
+                <span class="chip active">filesystem</span>
+                <span class="chip active">git</span>
+                <span class="chip active">docker</span>
+                <span class="chip">network</span>
+                <span class="chip">credential</span>
+                <span class="chip">admin</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Webhook Port</label>
+              <input type="number" id="set-webhook-port" value="18789">
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h2>About</h2>
+          <div class="settings-card about-card">
+            <div class="about-row"><span>Version</span><span>0.2.0-mockup</span></div>
+            <div class="about-row"><span>Actuator</span><span>actuator-g v0.1.0</span></div>
+            <div class="about-row"><span>Runtime</span><span>Tauri v2</span></div>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
   <script src="app.js"></script>
 </body>

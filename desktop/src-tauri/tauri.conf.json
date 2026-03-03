@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-config-schema/schema.json",
-  "productName": "Actuator G",
+  "productName": "Botster Desktop",
   "version": "0.1.0",
   "identifier": "com.botsters.actuator-g",
   "build": {
@@ -15,11 +15,11 @@
     },
     "windows": [
       {
-        "title": "Actuator G",
-        "width": 480,
-        "height": 640,
+        "title": "Botster Desktop",
+        "width": 700,
+        "height": 500,
         "resizable": true,
-        "visible": false
+        "visible": true
       }
     ]
   },
