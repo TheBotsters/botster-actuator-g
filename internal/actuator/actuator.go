@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -30,6 +31,7 @@ type Config struct {
 	BrainActuator  bool
 	WebhookPort    int
 	WebhookToken   string
+	TokenFile      string
 }
 
 // Actuator connects to the broker and executes commands.
@@ -169,6 +171,14 @@ func (a *Actuator) readLoop(conn *websocket.Conn) {
 				continue
 			}
 			go a.handleWake(msg)
+
+		case "token_rotated":
+			var msg protocol.TokenRotated
+			if err := json.Unmarshal(data, &msg); err != nil {
+				log.Printf("[actuator] Invalid token_rotated message: %s", err)
+				continue
+			}
+			a.handleTokenRotated(msg)
 
 		case "error":
 			var msg protocol.ErrorMessage
@@ -400,6 +410,35 @@ func (a *Actuator) send(msg interface{}) {
 	if err := conn.Write(ctx, websocket.MessageText, data); err != nil {
 		log.Printf("[botster-actuator] Failed to send message: %s", err)
 	}
+}
+
+func (a *Actuator) handleTokenRotated(msg protocol.TokenRotated) {
+	if msg.Token == "" {
+		log.Println("[botster-actuator] CRITICAL: token_rotated message had empty token, ignoring")
+		return
+	}
+
+	a.mu.Lock()
+	a.config.AgentToken = msg.Token
+	tokenFile := a.config.TokenFile
+	a.mu.Unlock()
+
+	log.Println("[botster-actuator] Token rotated by broker, persisting to disk")
+
+	if tokenFile == "" {
+		log.Println("[botster-actuator] WARNING: no --token-file configured, rotated token will not survive restart")
+		return
+	}
+
+	if err := a.persistToken(tokenFile, msg.Token); err != nil {
+		log.Printf("[botster-actuator] CRITICAL: failed to persist rotated token to %s: %s", tokenFile, err)
+	} else {
+		log.Printf("[botster-actuator] Token persisted to %s", tokenFile)
+	}
+}
+
+func (a *Actuator) persistToken(path, token string) error {
+	return os.WriteFile(path, []byte(token+"\n"), 0600)
 }
 
 func (a *Actuator) scheduleReconnect() {

@@ -35,6 +35,7 @@ Options:
   --brain                  Deprecated alias for --brain-actuator
   --webhook-port <port>    Webhook port for wake delivery
   --webhook-token <token>  Webhook auth token
+  --token-file <path>      Path to persist rotated tokens (read on startup)
   --version                Show version
   --help                   Show this help
 `, version)
@@ -42,12 +43,13 @@ Options:
 }
 
 type opts struct {
-	id           string
-	cwd          string
-	capabilities []string
+	id            string
+	cwd           string
+	capabilities  []string
 	brainActuator bool
-	webhookPort  int
-	webhookToken string
+	webhookPort   int
+	webhookToken  string
+	tokenFile     string
 }
 
 func parseArgs(args []string) opts {
@@ -87,6 +89,11 @@ func parseArgs(args []string) opts {
 			if i < len(args) {
 				o.webhookToken = args[i]
 			}
+		case "--token-file":
+			i++
+			if i < len(args) {
+				o.tokenFile = args[i]
+			}
 		case "--version":
 			fmt.Println(version)
 			os.Exit(0)
@@ -102,6 +109,17 @@ func main() {
 
 	brokerURL := os.Getenv("SEKS_BROKER_URL")
 	agentToken := os.Getenv("SEKS_BROKER_TOKEN")
+
+	// If a token file exists, its contents override the env var
+	if o.tokenFile != "" {
+		if data, err := os.ReadFile(o.tokenFile); err == nil {
+			fileToken := strings.TrimSpace(string(data))
+			if fileToken != "" {
+				log.Printf("[actuator] Loaded token from %s", o.tokenFile)
+				agentToken = fileToken
+			}
+		}
+	}
 
 	if brokerURL == "" || agentToken == "" {
 		fmt.Fprintln(os.Stderr, "Error: SEKS_BROKER_URL and SEKS_BROKER_TOKEN must be set")
@@ -140,6 +158,7 @@ func main() {
 		BrainActuator: o.brainActuator,
 		WebhookPort:   o.webhookPort,
 		WebhookToken:  o.webhookToken,
+		TokenFile:     o.tokenFile,
 	}
 
 	if o.brainActuator {

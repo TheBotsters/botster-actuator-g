@@ -77,6 +77,12 @@ type WakeDelivery struct {
 	Ts     string `json:"ts"`
 }
 
+// TokenRotated is sent by the broker when the agent token has been rotated.
+type TokenRotated struct {
+	Type  string `json:"type"`  // "token_rotated"
+	Token string `json:"new_token"` // new agent token
+}
+
 // ErrorMessage is an error from the broker.
 type ErrorMessage struct {
 	Type    string `json:"type"` // "error"
