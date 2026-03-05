@@ -99,14 +99,14 @@ func (a *Actuator) connect() {
 		url.QueryEscape(a.config.ActuatorID),
 	)
 
-	log.Printf("[actuator] Connecting to %s/ws as %s", a.config.BrokerURL, a.config.ActuatorID)
+	log.Printf("[botster-actuator] Connecting to %s/ws as %s", a.config.BrokerURL, a.config.ActuatorID)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	conn, _, err := websocket.Dial(ctx, wsURL, nil)
 	if err != nil {
-		log.Printf("[actuator] Failed to connect: %s", err)
+		log.Printf("[botster-actuator] Failed to connect: %s", err)
 		a.scheduleReconnect()
 		return
 	}
@@ -118,7 +118,7 @@ func (a *Actuator) connect() {
 	a.conn = conn
 	a.mu.Unlock()
 
-	log.Printf("[actuator] Connected and authenticated as %s", a.config.ActuatorID)
+	log.Printf("[botster-actuator] Connected and authenticated as %s", a.config.ActuatorID)
 	a.reconnect.Reset()
 
 	// Read loop
@@ -135,7 +135,7 @@ func (a *Actuator) readLoop(conn *websocket.Conn) {
 			a.mu.Unlock()
 
 			if !destroyed {
-				log.Printf("[actuator] Disconnected: %s", err)
+				log.Printf("[botster-actuator] Disconnected: %s", err)
 				a.scheduleReconnect()
 			}
 			return
@@ -143,7 +143,7 @@ func (a *Actuator) readLoop(conn *websocket.Conn) {
 
 		var env protocol.InboundMessage
 		if err := json.Unmarshal(data, &env); err != nil {
-			log.Printf("[actuator] Invalid message: %s", err)
+			log.Printf("[botster-actuator] Invalid message: %s", err)
 			continue
 		}
 
@@ -151,7 +151,7 @@ func (a *Actuator) readLoop(conn *websocket.Conn) {
 		case "command_delivery":
 			var msg protocol.CommandDelivery
 			if err := json.Unmarshal(data, &msg); err != nil {
-				log.Printf("[actuator] Invalid command_delivery: %s", err)
+				log.Printf("[botster-actuator] Invalid command_delivery: %s", err)
 				continue
 			}
 			go a.handleCommand(msg)
@@ -175,10 +175,10 @@ func (a *Actuator) readLoop(conn *websocket.Conn) {
 			if err := json.Unmarshal(data, &msg); err != nil {
 				continue
 			}
-			log.Printf("[actuator] Broker error [%s]: %s", msg.Code, msg.Message)
+			log.Printf("[botster-actuator] Broker error [%s]: %s", msg.Code, msg.Message)
 
 		default:
-			log.Printf("[actuator] Unknown message type: %s", env.Type)
+			log.Printf("[botster-actuator] Unknown message type: %s", env.Type)
 		}
 	}
 }
@@ -189,7 +189,7 @@ func (a *Actuator) handleCommand(msg protocol.CommandDelivery) {
 		return
 	}
 
-	log.Printf("[actuator] Command %s: %s", msg.ID, msg.Capability)
+	log.Printf("[botster-actuator] Command %s: %s", msg.ID, msg.Capability)
 
 	switch msg.Capability {
 	case "exec":
@@ -333,7 +333,7 @@ func (a *Actuator) handleExec(id string, payload protocol.ExecPayload) {
 
 func (a *Actuator) handleWake(msg protocol.WakeDelivery) {
 	if a.config.WebhookPort == 0 {
-		log.Println("[actuator] Received wake but no webhook port configured — dropping")
+		log.Println("[botster-actuator] Received wake but no webhook port configured — dropping")
 		return
 	}
 
@@ -350,7 +350,7 @@ func (a *Actuator) handleWake(msg protocol.WakeDelivery) {
 
 	req, err := http.NewRequestWithContext(ctx, "POST", wakeURL, bytes.NewReader(body))
 	if err != nil {
-		log.Printf("[actuator] Wake delivery failed: %s", err)
+		log.Printf("[botster-actuator] Wake delivery failed: %s", err)
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -360,11 +360,11 @@ func (a *Actuator) handleWake(msg protocol.WakeDelivery) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Printf("[actuator] Wake delivery failed to %s: %s", wakeURL, err)
+		log.Printf("[botster-actuator] Wake delivery failed to %s: %s", wakeURL, err)
 		return
 	}
 	defer resp.Body.Close()
-	log.Printf("[actuator] Wake delivered to %s: %d", wakeURL, resp.StatusCode)
+	log.Printf("[botster-actuator] Wake delivered to %s: %d", wakeURL, resp.StatusCode)
 }
 
 func (a *Actuator) sendResult(id, status string, result interface{}) {
@@ -390,7 +390,7 @@ func (a *Actuator) send(msg interface{}) {
 
 	data, err := json.Marshal(msg)
 	if err != nil {
-		log.Printf("[actuator] Failed to marshal message: %s", err)
+		log.Printf("[botster-actuator] Failed to marshal message: %s", err)
 		return
 	}
 
@@ -398,7 +398,7 @@ func (a *Actuator) send(msg interface{}) {
 	defer cancel()
 
 	if err := conn.Write(ctx, websocket.MessageText, data); err != nil {
-		log.Printf("[actuator] Failed to send message: %s", err)
+		log.Printf("[botster-actuator] Failed to send message: %s", err)
 	}
 }
 
@@ -412,6 +412,6 @@ func (a *Actuator) scheduleReconnect() {
 	}
 
 	if !a.reconnect.Schedule(func() { a.connect() }) {
-		log.Println("[actuator] Max reconnection attempts reached")
+		log.Println("[botster-actuator] Max reconnection attempts reached")
 	}
 }
